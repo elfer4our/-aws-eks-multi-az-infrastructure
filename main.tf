@@ -29,7 +29,7 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = "1.31"
 
-  iam_role_name            = "candidate-eks-cluster-role"
+  iam_role_name            = "testing-eks-cluster-role"
   iam_role_use_name_prefix = false
 
   vpc_id                   = module.vpc.vpc_id

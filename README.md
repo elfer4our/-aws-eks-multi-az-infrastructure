@@ -1,4 +1,4 @@
-# AWS EKS Technical Assessment
+# AWS EKS Technical Architecture
 
 This repo is aimed for hihgly avaiable EKS clusters
 
@@ -70,7 +70,7 @@ graph TB
 ```
 
 ### Phase 2: Kubernetes Deployment
-- `aws eks update-kubeconfig --region ap-southeast-2 --name candidate-k8s-cluster --profile candidate-session`
+- `aws eks update-kubeconfig --region ap-southeast-2 --name testing-k8s-cluster --profile testing-session`
 - `kubectl apply -f k8s-app.yml`
 
 
