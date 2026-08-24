@@ -1,0 +1,132 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-test
+
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myconfigmap
+data:
+  APP_ENV: "production"
+  APP_LOG_LEVEL: "info"
+
+# Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: app-test
+type: Opaque
+stringData:
+  DB_PASSWORD: "asd123!@#"
+
+# Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  namespace: app-test
+  labels:
+    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-app
+    spec:
+      containers:
+      - name: web
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        # Resource Requests and Limits
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+        # Liveness and Readiness Probes
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # Environment Vairables Config Map
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secret
+        # Storage Integration
+        volumeMount:
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: app-vpc
+           
+
+
+# Service (Cluster IP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: app-test
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: sample-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+
+# Persistent Storage Integration
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-vpc
+  namespace: app-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: ebs-sc
+
+# Ingress + ALB Ingress Controller
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: app-test
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
